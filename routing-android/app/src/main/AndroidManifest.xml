@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.here.android.example.routing">
+
+    <uses-sdk
+        android:minSdkVersion="14"
+        android:targetSdkVersion="16" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Additional permission for LiveSight -->
+    <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:hardwareAccelerated="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--Developers should put application credentials here.To obtain them, please register the application
+        at https://developer.here.com/develop/mobile-sdks-->
+        <meta-data
+            android:name="com.here.android.maps.appid"
+            android:value="KQ4PUqh8cnsajv997RFB" />
+        <meta-data
+            android:name="com.here.android.maps.apptoken"
+            android:value="9npprH-0cWQc1EUgaXXBgQ" />
+        <meta-data
+            android:name="com.here.android.maps.license.key"
+            android:value="SArVXry0Yb5naFycmDpSqECGa93UW85IOsYBmJi34j3tF3N5RqF/Qcfos2KE+RPgL9DQnlTJ3trhZAVRBe4edFC9Hfn9tBmYQm0ZOkJarjxqEgy8nn6JWH+pTjm4okKixnIhbJT8Us3QooA29PpFMIqzHlw1VKIeNhvrfbXw8DCgpaoiuXzxqDsKtkHhihETiz+qGtNW0L98QToshzbS/frmh1pZHSEnHsL3laE6sT5tnzGww5j8h61DFbSJ4mRw2NFgOvLpuYIbQ1RUmK3yy1jQZhyYTXhqLl8wT9RG+bXptoOsgTbS+pPhRoz7DchO6bEoU4R5fQreVQ0sevMNP7h/G+NmuFRvM0nyYkAbXhtr5GHB4CsZ3J++r7/fNm24UKAI7/pzZrWxGijQPn4wYuDBYcPkyVMT//VWwX1h9Gus8OV79hAqL+AEEZxsbXZp86qA9zJOyrCeAga1EZV+JoXJQi7Lmcbm3eP+d/OlssrrYxNncOX+VWBTBKrweA/TCWf1+vjm1kq4VlZ2kQTCVbaVe9saLKFTtEVYYPqM2HGA62+xyFdjJHI5DFLWGxxoxejoMNmIuDn5qJ8XyuMtzNuuHdwbTrhxrVsJXHSbuQd8f3oWwJrjPn5Go97ihTtT5798RozCbYgstZHxixcxxeeI99Rn10OxIzz3J4DFkGw="/>
+
+        <service
+            android:name="com.here.android.mpa.service.MapService"
+            android:exported="true"
+            android:label="HereMapService"
+            android:process="global.Here.Map.Service.v2">
+            <intent-filter>
+                <action android:name="com.here.android.mpa.service.MapService"></action>
+            </intent-filter>
+        </service>
+    </application>
+
+
+</manifest>
