@@ -257,7 +257,7 @@ public class MapFragmentView {
          * listeners for demo purpose,please refer to HERE Android SDK API documentation for details
          */
         addNavigationListeners();
-//        setupVoice();
+        setupVoice();
     }
 
     private void addNavigationListeners() {
