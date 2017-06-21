@@ -90,7 +90,7 @@ public class MapFragmentView {
                         posManager.start(PositioningManager.LocationMethod.GPS_NETWORK);
                         GeoPosition position = posManager.getPosition();
                         GeoCoordinate cor = position.getCoordinate();
-                        System.out.println("desplatitude"+posManager.getPosition().getLatitudeAccuracy());
+                        System.out.println("desplatitude"+posManager.getPosition().getCoordinate().getLatitude());
                         System.out.println("desplongitude"+cor.getLongitude());
                         m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
 
