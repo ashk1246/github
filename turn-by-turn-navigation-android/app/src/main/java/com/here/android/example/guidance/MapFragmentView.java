@@ -23,11 +23,13 @@ import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.OnEngineInitListener;
+import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoicePackage;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapFragment;
+import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.Route;
@@ -38,15 +40,14 @@ import com.here.android.mpa.routing.RouteWaypoint;
 import com.here.android.mpa.routing.Router;
 import com.here.android.mpa.routing.RoutingError;
 import com.here.odnp.util.Log;
+import com.vividsolutions.jts.geomgraph.Position;
 
 import android.app.Activity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import static android.R.attr.id;
-import static android.content.ContentValues.TAG;
-import static com.here.android.example.guidance.BuildConfig.DEBUG;
+
 
 /**
  * This class encapsulates the properties and functionality of the Map view.It also triggers a
@@ -83,9 +84,25 @@ public class MapFragmentView {
 
                     if (error == Error.NONE) {
                         m_map = m_mapFragment.getMap();
-                        m_map.setCenter(new GeoCoordinate(10.790483, 78.704673),
-                                Map.Animation.LINEAR);
-                        m_map.setZoomLevel(13.2);
+                        //today changes......................................................
+                        final MapMarker marker = new MapMarker();
+                        PositioningManager posManager = PositioningManager.getInstance();
+                        posManager.start(PositioningManager.LocationMethod.GPS_NETWORK);
+                        GeoPosition position = posManager.getPosition();
+                        GeoCoordinate cor = position.getCoordinate();
+                        System.out.println("desplatitude"+posManager.getPosition().getLatitudeAccuracy());
+                        System.out.println("desplongitude"+cor.getLongitude());
+                        m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
+
+                        // Display position indicator
+                        m_map.getPositionIndicator().setVisible(true);
+                        m_map.setCenter(posManager.getPosition().getCoordinate(), Map.Animation.LINEAR);
+                        m_map.setZoomLevel(14);
+                        m_map.addMapObject(marker);
+                        //today changes......................................................
+//                        m_map.setCenter(new GeoCoordinate(10.790483, 78.704673),
+//                                Map.Animation.LINEAR);
+//                        m_map.setZoomLevel(13.2);
                         /*
                          * Get the NavigationManager instance.It is responsible for providing voice
                          * and visual instructions while driving and walking
@@ -135,9 +152,10 @@ public class MapFragmentView {
 
         /* Define waypoints for the route */
         /* START: 4350 Still Creek Dr */
-        RouteWaypoint startPoint = new RouteWaypoint(new GeoCoordinate(49.259149, -123.008555));
+
+        RouteWaypoint startPoint = new RouteWaypoint(new GeoCoordinate(10.813008, 78.681001));
         /* END: Langley BC */
-        RouteWaypoint destination = new RouteWaypoint(new GeoCoordinate(49.073640, -122.559549));
+        RouteWaypoint destination = new RouteWaypoint(new GeoCoordinate(10.830512, 78.682419));
 
         /* Add both waypoints to the route plan */
         routePlan.addWaypoint(startPoint);
@@ -257,7 +275,7 @@ public class MapFragmentView {
          * listeners for demo purpose,please refer to HERE Android SDK API documentation for details
          */
         addNavigationListeners();
-        setupVoice();
+
     }
 
     private void addNavigationListeners() {
@@ -289,94 +307,7 @@ public class MapFragmentView {
         }
     };
 
-    //start checking......................................................................................................................
-    private void setupVoice() {
-        // Retrieve the VoiceCatalog and download the latest updates
-        VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
-
-
-        if (!voiceCatalog.isLocalCatalogAvailable()) {
-            if (DEBUG) Log.d(Tag, "Voice catalog is not available in local storage.");
-            voiceCatalog.downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
-
-                @Override
-                public void onDownloadDone(VoiceCatalog.Error error) {
-
-                    if (error == VoiceCatalog.Error.NONE) {
-
-                        // catalog download successful
-                        if (DEBUG) Log.d(Tag, "Download voice catalog successfully.");
-//                        System.out.println("fuck"+error);
-                        Toast.makeText(m_activity.getApplicationContext(), "Voice catalog download successful.", Toast.LENGTH_LONG).show();
-                    } else {
-                        if (DEBUG) Log.d(Tag, "Download voice catalog failed.");
-
-                        Toast.makeText(m_activity.getApplicationContext(), "Voice catalog download error.", Toast.LENGTH_LONG).show();
-                    }
-
-                    // Get the list of voice packages from the voice catalog list
-                    List<VoicePackage> voicePackages =
-                            VoiceCatalog.getInstance().getCatalogList();
-                    if (voicePackages.size() == 0) {
-                        if (DEBUG) Log.d(Tag, "Voice catalog size is 0.");
-
-                        Toast.makeText(m_activity.getApplicationContext(), "Voice catalog size is 0.", Toast.LENGTH_LONG).show();
-                    }
-
-                    long id = -1;
-                    // select
-                    for (VoicePackage voicePackage : voicePackages) {
-                        if (voicePackage.getMarcCode().compareToIgnoreCase("eng") == 0) {
-                            //if (voicePackage.isTts()) // TODO: need to figure out why always return false
-                            {
-                                id = voicePackage.getId();
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!VoiceCatalog.getInstance().isLocalVoiceSkin(id)) {
-                        final long finalId = id;
-                        VoiceCatalog.getInstance().downloadVoice(id, new VoiceCatalog.OnDownloadDoneListener() {
-                            @Override
-                            public void onDownloadDone(VoiceCatalog.Error error) {
-                                if (error == VoiceCatalog.Error.NONE) {
-                                    //voice skin download successful
-                                    if (DEBUG) Log.d(Tag, "Download voice skin successfully.");
-
-                                    Toast.makeText(m_activity.getApplicationContext(), "Voice skin download successful.", Toast.LENGTH_LONG).show();
-
-                                    // set the voice skin for use by navigation manager
-                                    if (VoiceCatalog.getInstance().getLocalVoiceSkin(finalId) != null) {
-                                        m_navigationManager.setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(finalId));
-                                    } else {
-                                        if (DEBUG) Log.d(Tag, "Get local voice skin error.");
-
-                                        Toast.makeText(m_activity.getApplicationContext(), "Navi manager set voice skin error.", Toast.LENGTH_LONG).show();
-                                    }
-
-                                } else {
-                                    if (DEBUG) Log.d(Tag, "Download voice skin failed.");
-                                    Toast.makeText(m_activity.getApplicationContext(), "Voice skin download error.", Toast.LENGTH_LONG).show();
-                                }
-
-                            }
-                        });
-                    } else {
-                        // set the voice skin for use by navigation manager
-                        if (VoiceCatalog.getInstance().getLocalVoiceSkin(id) != null) {
-                            m_navigationManager.setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(id));
-                        } else {
-                            if (DEBUG) Log.d(Tag, "Get local voice skin error.");
-                            Toast.makeText(m_activity.getApplicationContext(), "Navi manager set voice skin error.", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                }
-            });
-        }
-    }
-//end checking......................................................................................................................
-    private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
+        private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
         @Override
         public void onRunningStateChanged() {
             Toast.makeText(m_activity, "Running state changed", Toast.LENGTH_SHORT).show();
