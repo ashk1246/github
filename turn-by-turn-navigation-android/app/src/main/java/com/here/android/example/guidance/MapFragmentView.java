@@ -16,12 +16,14 @@
 
 package com.here.android.example.guidance;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPosition;
+import com.here.android.mpa.common.Image;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.guidance.NavigationManager;
@@ -43,6 +45,13 @@ import com.here.odnp.util.Log;
 import com.vividsolutions.jts.geomgraph.Position;
 
 import android.app.Activity;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.PointF;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -64,6 +73,7 @@ public class MapFragmentView {
     private GeoBoundingBox m_geoBoundingBox;
     private Route m_route;
     private String Tag="MapFragmentview";
+    private MapMarker marker;
     GPSTracker gps;
     double latitude ;
     double longitude ;
@@ -101,15 +111,41 @@ public class MapFragmentView {
 
                     if (error == Error.NONE) {
                         m_map = m_mapFragment.getMap();
-                        //today changes......................................................
-                        final MapMarker marker = new MapMarker();
-                        m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
-                        // Display position indicator
-                        m_map.getPositionIndicator().setVisible(true);
-                        m_map.setCenter(new GeoCoordinate(latitude, longitude),
-                        Map.Animation.BOW);
-                        m_map.addMapObject(marker);
-                        m_map.setZoomLevel(14);
+
+                        if (marker == null) {
+                            Image image = new Image();
+                            try {
+                                image.setImageResource(R.drawable.ic_marker);
+                            } catch (final IOException e) {
+                                e.printStackTrace();
+                            }
+                            marker = new MapMarker(new GeoCoordinate(latitude, longitude), image);
+                            marker.setAnchorPoint(new PointF(image.getWidth()/2, image.getHeight()));
+                            m_map.addMapObject(marker);
+                        } else {
+                            marker.setCoordinate(new GeoCoordinate(latitude, longitude));
+                        }
+                        m_map.setCenter(new GeoCoordinate(latitude, longitude), Map.Animation.BOW);
+
+
+//
+//                        //today changes......................................................
+//                        Image image = new Image();
+//                        try {
+//                            image.setImageResource(R.drawable.ic_action);
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                        marker = new MapMarker(new GeoCoordinate(latitude, longitude),image);
+//
+//                        m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
+//                        m_map.getPositionIndicator().setVisible(true);
+//                        m_map.setCenter(new GeoCoordinate(latitude, longitude),
+//                        Map.Animation.BOW);
+//                        m_map.setZoomLevel(14);
+//
+//                        m_map.addMapObject(marker);
+
 
                         //today changes......................................................
 
