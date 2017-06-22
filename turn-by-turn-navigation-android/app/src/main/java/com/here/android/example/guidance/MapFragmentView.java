@@ -64,11 +64,28 @@ public class MapFragmentView {
     private GeoBoundingBox m_geoBoundingBox;
     private Route m_route;
     private String Tag="MapFragmentview";
+    GPSTracker gps;
+    double latitude ;
+    double longitude ;
 
     public MapFragmentView(Activity activity) {
         m_activity = activity;
         initMapFragment();
         initNaviControlButton();
+        gps = new GPSTracker(activity);
+        if(gps.canGetLocation()){
+
+            latitude = gps.getLatitude();
+            longitude = gps.getLongitude();
+
+            // \n is for new line
+            Toast.makeText(activity, "Your Location is - \nLat: " + latitude + "\nLong: " + longitude, Toast.LENGTH_LONG).show();
+        }else{
+            // can't get location
+            // GPS or Network is not enabled
+            // Ask user to enable GPS/network in settings
+            gps.showSettingsAlert();
+        }
     }
 
     private void initMapFragment() {
@@ -86,22 +103,16 @@ public class MapFragmentView {
                         m_map = m_mapFragment.getMap();
                         //today changes......................................................
                         final MapMarker marker = new MapMarker();
-                        PositioningManager posManager = PositioningManager.getInstance();
-                        posManager.start(PositioningManager.LocationMethod.GPS_NETWORK);
-                        GeoPosition position = posManager.getPosition();
-                        GeoCoordinate cor = position.getCoordinate();
-                        System.out.println("desplatitude"+posManager.getPosition().getCoordinate().getLatitude());
-                        System.out.println("desplongitude"+cor.getLongitude());
                         m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
-
                         // Display position indicator
                         m_map.getPositionIndicator().setVisible(true);
-                        m_map.setCenter(posManager.getPosition().getCoordinate(), Map.Animation.LINEAR);
-                        m_map.setZoomLevel(14);
+                        m_map.setCenter(new GeoCoordinate(latitude, longitude),
+                        Map.Animation.BOW);
                         m_map.addMapObject(marker);
+                        m_map.setZoomLevel(14);
+
                         //today changes......................................................
-//                        m_map.setCenter(new GeoCoordinate(10.790483, 78.704673),
-//                                Map.Animation.LINEAR);
+
 //                        m_map.setZoomLevel(13.2);
                         /*
                          * Get the NavigationManager instance.It is responsible for providing voice
