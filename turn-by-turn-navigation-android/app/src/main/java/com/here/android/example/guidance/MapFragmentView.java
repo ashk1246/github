@@ -29,6 +29,7 @@ import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoicePackage;
+import com.here.android.mpa.guidance.VoiceSkin;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.MapMarker;
@@ -68,6 +69,7 @@ public class MapFragmentView {
     private MapFragment m_mapFragment;
     private Activity m_activity;
     private Button m_naviControlButton;
+    private Button download;
     private Map m_map;
     private NavigationManager m_navigationManager;
     private GeoBoundingBox m_geoBoundingBox;
@@ -77,6 +79,9 @@ public class MapFragmentView {
     GPSTracker gps;
     double latitude ;
     double longitude ;
+    private static final String TAG = "MapFragmentView";
+    // id of en-US voice skin package
+    private final int EN_US_ID = 206;
 
     public MapFragmentView(Activity activity) {
         m_activity = activity;
@@ -102,7 +107,8 @@ public class MapFragmentView {
         /* Locate the mapFragment UI element */
         m_mapFragment = (MapFragment) m_activity.getFragmentManager()
                 .findFragmentById(R.id.mapfragment);
-
+//        updateInstalledVoices();
+//        downloadCatalogAndSkin();
         if (m_mapFragment != null) {
             /* Initialize the MapFragment, results will be given via the called back. */
             m_mapFragment.init(new OnEngineInitListener() {
@@ -128,34 +134,8 @@ public class MapFragmentView {
                         m_map.setCenter(new GeoCoordinate(latitude, longitude), Map.Animation.BOW);
 
 
-//
-//                        //today changes......................................................
-//                        Image image = new Image();
-//                        try {
-//                            image.setImageResource(R.drawable.ic_action);
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                        marker = new MapMarker(new GeoCoordinate(latitude, longitude),image);
-//
-//                        m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
-//                        m_map.getPositionIndicator().setVisible(true);
-//                        m_map.setCenter(new GeoCoordinate(latitude, longitude),
-//                        Map.Animation.BOW);
-//                        m_map.setZoomLevel(14);
-//
-//                        m_map.addMapObject(marker);
-
-
-                        //today changes......................................................
-
-//                        m_map.setZoomLevel(13.2);
-                        /*
-                         * Get the NavigationManager instance.It is responsible for providing voice
-                         * and visual instructions while driving and walking
-                         */
                         m_navigationManager = NavigationManager.getInstance();
-                        System.out.println("fuck");
+//                        System.out.println("fuck");
                     } else {
                         Toast.makeText(m_activity,
                                 "ERROR: Cannot initialize Map with error " + error,
@@ -164,6 +144,8 @@ public class MapFragmentView {
                     }
                 }
             });
+
+            updateInstalledVoices();
         }
         else{
             System.out.println("doll");
@@ -177,14 +159,14 @@ public class MapFragmentView {
         CoreRouter coreRouter = new CoreRouter();
 
         /* Initialize a RoutePlan */
-        RoutePlan routePlan = new RoutePlan();
+        final RoutePlan routePlan = new RoutePlan();
 
         /*
          * Initialize a RouteOption.HERE SDK allow users to define their own parameters for the
          * route calculation,including transport modes,route types and route restrictions etc.Please
          * refer to API doc for full list of APIs
          */
-        RouteOptions routeOptions = new RouteOptions();
+        final RouteOptions routeOptions = new RouteOptions();
         /* Other transport modes are also available e.g Pedestrian */
         routeOptions.setTransportMode(RouteOptions.TransportMode.CAR);
         /* Disable highway in this route. */
@@ -202,7 +184,7 @@ public class MapFragmentView {
 
         RouteWaypoint startPoint = new RouteWaypoint(new GeoCoordinate(10.813008, 78.681001));
         /* END: Langley BC */
-        RouteWaypoint destination = new RouteWaypoint(new GeoCoordinate(10.830512, 78.682419));
+        final RouteWaypoint destination = new RouteWaypoint(new GeoCoordinate(10.223389, 77.478084));
 
         /* Add both waypoints to the route plan */
         routePlan.addWaypoint(startPoint);
@@ -258,8 +240,94 @@ public class MapFragmentView {
                 });
     }
 
+    private void updateInstalledVoices() {
+        System.out.println("suuck");
+
+        // First get the voice catalog from the backend that contains all available languages (so called voiceskins) for download
+        VoiceCatalog.getInstance().downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
+            @Override
+            public void onDownloadDone(VoiceCatalog.Error error) {
+                if (error != VoiceCatalog.Error.NONE) {
+                    Toast.makeText(m_activity, "Failed to download catalog", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(m_activity, "Catalog downloaded", Toast.LENGTH_LONG).show();
+
+                    boolean result = false;
+                    List<VoicePackage> packages = VoiceCatalog.getInstance().getCatalogList();
+                    List<VoiceSkin> local = VoiceCatalog.getInstance().getLocalVoiceSkins();
+
+                    // if successful, check for updated version in catalog compared to local installed ones
+                    for (VoiceSkin voice : local) {
+                        for (VoicePackage pkg : packages) {
+                            if (voice.getId() == pkg.getId() && !voice.getVersion().equals(pkg.getVersion())) {
+                                Toast.makeText(m_activity, "New version detected....downloading", Toast.LENGTH_LONG).show();
+                                downloadVoice(voice.getId());
+                                result = true;
+                            }
+                        }
+                    }
+
+                    if (!result)
+                        Toast.makeText(m_activity, "No updates found", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+    }
+    private void downloadCatalogAndSkin() {
+
+        // First get the voice catalog from the backend that contains all available languages (so called voiceskins) for download
+        VoiceCatalog.getInstance().downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
+            @Override
+            public void onDownloadDone(VoiceCatalog.Error error) {
+                if (error != VoiceCatalog.Error.NONE) {
+                    Toast.makeText(m_activity, "Failed to download catalog", Toast.LENGTH_LONG).show();
+                } else {
+                    System.out.println("hello");
+                    Toast.makeText(m_activity, "Catalog downloaded", Toast.LENGTH_LONG).show();
+
+                    // If catalog was successfully downloaded, you can iterate over it / show it to the user / select a skin for download
+                    List<VoicePackage> packages = VoiceCatalog.getInstance().getCatalogList();
+                    android.util.Log.i(TAG, "# of available packages: " + packages.size());
+                    System.out.println("hello" + packages.size());
+                    // debug print of the voice skins that are available
+                    for (VoicePackage lang : packages)
+                        android.util.Log.d(TAG, "Language name: " + lang.getLocalizedLanguage() + " is TTS: " + lang.isTts() + " ID: " + lang.getId());
+
+                    // Return list of already installed voices on device
+                    List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
+
+                    // debug print of the already locally installed skins
+                    android.util.Log.d(TAG, "# of local skins: " + localInstalledSkins.size());
+                    for (VoiceSkin voice : localInstalledSkins) {
+                        android.util.Log.d(TAG, "ID: " + voice.getId() + " Language: " + voice.getLanguage());
+                    }
+
+                    downloadVoice(EN_US_ID);
+                }
+            }
+        });
+    }
+
+    private void downloadVoice(final long skin_id) {
+        // kick off the download for a voice skin from the backend
+        VoiceCatalog.getInstance().downloadVoice(skin_id, new VoiceCatalog.OnDownloadDoneListener() {
+            @Override
+            public void onDownloadDone(VoiceCatalog.Error error) {
+                if (error != VoiceCatalog.Error.NONE) {
+                    Toast.makeText(m_activity, "Failed downloading voice skin", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(m_activity, "Voice skin downloaded and activated", Toast.LENGTH_LONG).show();
+                    // set output for Nuance TTS
+                    // set usage of downloaded voice
+                    NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(skin_id));
+                }
+            }
+        });
+    }
+
     private void initNaviControlButton() {
         m_naviControlButton = (Button) m_activity.findViewById(R.id.naviCtrlButton);
+        download=(Button)m_activity.findViewById(R.id.button);
         m_naviControlButton.setText(R.string.start_navi);
         m_naviControlButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -287,6 +355,12 @@ public class MapFragmentView {
                     m_naviControlButton.setText(R.string.start_navi);
                     m_route = null;
                 }
+            }
+        });
+        download.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                downloadCatalogAndSkin();
             }
         });
     }
