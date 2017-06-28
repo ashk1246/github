@@ -182,7 +182,7 @@ public class MapFragmentView {
         /* Define waypoints for the route */
         /* START: 4350 Still Creek Dr */
 
-        RouteWaypoint startPoint = new RouteWaypoint(new GeoCoordinate(10.813008, 78.681001));
+        RouteWaypoint startPoint = new RouteWaypoint(new GeoCoordinate(latitude, longitude));
         /* END: Langley BC */
         final RouteWaypoint destination = new RouteWaypoint(new GeoCoordinate(10.223389, 77.478084));
 
@@ -224,7 +224,7 @@ public class MapFragmentView {
                                 m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE,
                                         Map.MOVE_PRESERVE_ORIENTATION);
 
-                                startNavigation(m_route);
+                                startNavigationnew(m_route);
                             } else {
                                 Toast.makeText(m_activity,
                                         "Error:route results returned is not valid",
@@ -365,7 +365,7 @@ public class MapFragmentView {
         });
     }
 
-    private void startNavigation(Route route) {
+    private void startNavigationnew(Route route) {
 
         m_naviControlButton.setText(R.string.stop_navi);
         /* Display the position indicator on map */
@@ -378,15 +378,17 @@ public class MapFragmentView {
          * suitable for walking. Simulation and tracking modes can also be launched at this moment
          * by calling either simulate() or startTracking()
          */
-
+    //System.out.println("route"+route);
         m_navigationManager.startNavigation(route);
+
         /*
          * Set the map update mode to ROADVIEW.This will enable the automatic map movement based on
          * the current location.If user gestures are expected during the navigation, it's
          * recommended to set the map update mode to NONE first. Other supported update mode can be
          * found in HERE Android SDK API doc
          */
-        m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+//        m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+//        m_navigationManager.startTracking();
 
 
 
@@ -418,11 +420,15 @@ public class MapFragmentView {
         @Override
         public void onPositionUpdated(GeoPosition geoPosition) {
             /* Current position information can be retrieved in this callback */
-            geoPosition.getCoordinate();
-            geoPosition.getHeading();
-            geoPosition.getSpeed();
+//            geoPosition.getCoordinate();
+//            geoPosition.getHeading();
+//            geoPosition.getSpeed();
+            m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
             m_navigationManager.getTta(Route.TrafficPenaltyMode.DISABLED, true);
             m_navigationManager.getDestinationDistance();
+            m_navigationManager.startNavigation(m_route);
+            m_navigationManager.setRoute(m_route);
+
 
 
         }
